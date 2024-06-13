@@ -33,6 +33,9 @@ public class Gameplay : MonoBehaviour
         _currentLevel = level;
         _currentQuestionIndex = 0;
 
+        _hero.Score = 0;
+        _enemy.Score = 0;
+
         GetRandomQuestionsIndexes(_currentLevel);
 
         StartCoroutine(MainCoroutine());
