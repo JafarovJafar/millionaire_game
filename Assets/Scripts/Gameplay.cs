@@ -7,24 +7,31 @@ public class Gameplay : MonoBehaviour
 {
     public event UnityAction Finished;
 
+    [SerializeField] private WinScreen _winScreen;
     [SerializeField] private QuestionView _questionView;
     [SerializeField] private AnswersView _answersView;
 
-    [SerializeField] private bool _playerAnswered;
-    [SerializeField] private bool _enemyAnswered;
+    [SerializeField] private PlayerData _hero;
+    [SerializeField] private PlayerData _enemy;
+
+    [SerializeField] private BaseEnemy _enemyLogic;
 
     private LevelData _currentLevel;
 
     private int[] _questionsIndexesOrder;
     private int _currentQuestionIndex;
 
+    private int _heroPlayerIndex = 0;
+    private int _enemyPlayerIndex = 1;
+
     /// <summary>
-    /// Начать core-loop
+    /// РќР°С‡Р°С‚СЊ core-loop
     /// </summary>
-    /// <param name="level">Уровень, который необходимо проиграть</param>
+    /// <param name="level">РЈСЂРѕРІРµРЅСЊ, РєРѕС‚РѕСЂС‹Р№ РЅРµРѕР±С…РѕРґРёРјРѕ РїСЂРѕРёРіСЂР°С‚СЊ</param>
     public void StartGameLoop(LevelData level)
     {
         _currentLevel = level;
+        _currentQuestionIndex = 0;
 
         GetRandomQuestionsIndexes(_currentLevel);
 
@@ -53,33 +60,72 @@ public class Gameplay : MonoBehaviour
     // core-loop
     private IEnumerator MainCoroutine()
     {
+        _winScreen.Hide(true);
+        _answersView.DisAppear(true);
+
+        _answersView.AnswerClicked += Answer_Clicked;
+
         while (_currentQuestionIndex < _questionsIndexesOrder.Length)
         {
-            // устанавливаем вопрос и вызываем анимацию появления
-            // ждем, пока оба игрока ответят
-            // вызываем анимацию исчезания
+            // СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј РІРѕРїСЂРѕСЃ Рё РІС‹Р·С‹РІР°РµРј Р°РЅРёРјР°С†РёСЋ РїРѕСЏРІР»РµРЅРёСЏ
+            // Р¶РґРµРј, РїРѕРєР° РѕР±Р° РёРіСЂРѕРєР° РѕС‚РІРµС‚СЏС‚
+            // РІС‹Р·С‹РІР°РµРј Р°РЅРёРјР°С†РёСЋ РёСЃС‡РµР·Р°РЅРёСЏ
 
-            // Выбор вопроса
+            // Р’С‹Р±РѕСЂ РІРѕРїСЂРѕСЃР°
             int currentQuestionIndex = _questionsIndexesOrder[_currentQuestionIndex];
             QuestionData currentQuestion = _currentLevel.Questions[currentQuestionIndex];
 
-            // Показываем вопрос
+            // РџРѕРєР°Р·С‹РІР°РµРј РІРѕРїСЂРѕСЃ
             yield return ShowQuestion(currentQuestion);
-            // Показываем ответы
+            // РџРѕРєР°Р·С‹РІР°РµРј РѕС‚РІРµС‚С‹
             yield return ShowAnswers(currentQuestion);
 
-            // ждем, пока игроки ответят
+            _enemyLogic.Answer(currentQuestion, (answerIndex) =>
+            {
+                _enemy.SelectedAnswer = true;
+                _enemy.AnswerIndex = answerIndex;
+                _answersView.Select(answerIndex, _enemyPlayerIndex);
+            });
+
+            // Р¶РґРµРј, РїРѕРєР° РёРіСЂРѕРєРё РѕС‚РІРµС‚СЏС‚
             yield return WaitPlayersAnswers();
 
-            // скрываем ответы
+            CheckAnswer(_hero, currentQuestion);
+            CheckAnswer(_enemy, currentQuestion);
+
+            ResetAnswer(_hero);
+            ResetAnswer(_enemy);
+
+
+
+            // СЃРєСЂС‹РІР°РµРј РѕС‚РІРµС‚С‹
             yield return HideAnswers();
-            // скрываем вопросы
+            // СЃРєСЂС‹РІР°РµРј РІРѕРїСЂРѕСЃС‹
             yield return HideQuestion();
+
+            // РѕС‡РёС‰Р°РµРј РІС‹Р±РѕСЂ РёРіСЂРѕРєРѕРІ СЃ РѕС‚РІРµС‚РѕРІ
+            ClearSelections();
 
             _currentQuestionIndex++;
         }
 
+        _answersView.AnswerClicked -= Answer_Clicked;
+
+        _winScreen.Show(_hero, _enemy, false);
+        _winScreen.ContinueClicked += WinScreen_ContinueClicked;
+    }
+
+    private void WinScreen_ContinueClicked()
+    {
+        _winScreen.ContinueClicked -= WinScreen_ContinueClicked;
         Finished?.Invoke();
+    }
+
+    private void Answer_Clicked(int answerIndex)
+    {
+        _hero.SelectedAnswer = true;
+        _hero.AnswerIndex = answerIndex;
+        _answersView.Select(answerIndex, _heroPlayerIndex);
     }
 
     private IEnumerator ShowQuestion(QuestionData currentQuestion)
@@ -108,13 +154,22 @@ public class Gameplay : MonoBehaviour
 
     private IEnumerator WaitPlayersAnswers()
     {
-        while (!_playerAnswered || !_enemyAnswered)
-        {
-            yield return null;
-        }
+        while (!_hero.SelectedAnswer) yield return null;
+        while (!_enemy.SelectedAnswer) yield return null;
+    }
 
-        _playerAnswered = false;
-        _enemyAnswered = false;
+    private void CheckAnswer(PlayerData playerData, QuestionData questionData)
+    {
+        if (playerData.AnswerIndex == questionData.CorrectAnswerIndex)
+        {
+            playerData.Score++;
+        }
+    }
+
+    private void ResetAnswer(PlayerData playerData)
+    {
+        playerData.AnswerIndex = -1;
+        playerData.SelectedAnswer = false;
     }
 
     private IEnumerator HideAnswers()
@@ -137,5 +192,10 @@ public class Gameplay : MonoBehaviour
 
         while (!questionViewDisAppeared) yield return null;
         _questionView.Appeared -= viewDisAppearedAction;
+    }
+
+    private void ClearSelections()
+    {
+        _answersView.DeSelect();
     }
 }

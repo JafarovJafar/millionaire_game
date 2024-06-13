@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0b64c42a73a3124a8d6ef51af7ee18f, type: 3}
   m_Name: Question_1
   m_EditorClassIdentifier: 
-  _question: "\u041A\u043E\u0433\u0434\u0430 \u043D\u0430\u0447\u0430\u043B\u0430\u0441\u044C
+  _question: "\u043A\u043E\u0433\u0434\u0430 \u043D\u0430\u0447\u0430\u043B\u0430\u0441\u044C
     \u0432\u0442\u043E\u0440\u0430\u044F \u043C\u0438\u0440\u043E\u0432\u0430\u044F
     \u0432\u043E\u0439\u043D\u0430?"
   _answers:
@@ -20,3 +20,4 @@ MonoBehaviour:
   - "\u0447\u0442\u043E?"
   - "1941 \u0433\u043E\u0434"
   - "\u0432 39-\u043E\u043C"
+  _correctAnswerIndex: 3
