@@ -65,7 +65,15 @@ public class WinScreen : MonoBehaviour
     public void Hide(bool immediate = false)
     {
         float duration = immediate ? 0f : _animationDuration;
-        DoAnimation(0f, duration, null);
+        DoAnimation
+        (
+            0f,
+            duration,
+            () =>
+            {
+                _canvasGroup.blocksRaycasts = false;
+            }
+        );
     }
 
     private void DoAnimation
