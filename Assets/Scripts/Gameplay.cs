@@ -7,6 +7,7 @@ public class Gameplay : MonoBehaviour
 {
     public event UnityAction Finished;
 
+    [SerializeField] private IntroScreen _introScreen;
     [SerializeField] private WinScreen _winScreen;
     [SerializeField] private QuestionView _questionView;
     [SerializeField] private AnswersView _answersView;
@@ -64,9 +65,12 @@ public class Gameplay : MonoBehaviour
     private IEnumerator MainCoroutine()
     {
         _winScreen.Hide(true);
+        _questionView.DisAppear(true);
         _answersView.DisAppear(true);
 
         _answersView.AnswerClicked += Answer_Clicked;
+
+        yield return ShowIntro();
 
         while (_currentQuestionIndex < _questionsIndexesOrder.Length)
         {
@@ -116,6 +120,17 @@ public class Gameplay : MonoBehaviour
 
         _winScreen.Show(_hero, _enemy, false);
         _winScreen.ContinueClicked += WinScreen_ContinueClicked;
+    }
+
+    private IEnumerator ShowIntro()
+    {
+        bool showFinished = false;
+        UnityAction action = () => showFinished = true;
+        _introScreen.ShowFinished += action;
+        _introScreen.Show();
+
+        while (!showFinished) yield return null;
+        _introScreen.ShowFinished -= action;
     }
 
     private void WinScreen_ContinueClicked()

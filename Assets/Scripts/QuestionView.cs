@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.Events;
 using DG.Tweening;
 using EasyButtons;
@@ -39,13 +39,15 @@ public class QuestionView : MonoBehaviour
     }
 
     [Button]
-    public void DisAppear()
+    public void DisAppear(bool immediate = false)
     {
+        float duration = immediate ? 0f : _disAppearDuration;
+
         DoAnimation
         (
             0f,
             _disAppearEase,
-            _disAppearDuration,
+            duration,
             () => DisAppeared?.Invoke()
         );
     }
