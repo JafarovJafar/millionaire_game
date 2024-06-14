@@ -30,7 +30,7 @@ public class AnswersView : MonoBehaviour
 
     private Dictionary<int, AnswerView> _playersSelections;
 
-    private void Awake()
+    public void Init()
     {
         foreach (var view in _views) view.Init();
 

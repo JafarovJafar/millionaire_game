@@ -21,7 +21,7 @@ public class QuestionView : MonoBehaviour
 
     private RectTransform _transform;
 
-    private void Awake()
+    public void Init()
     {
         _transform = GetComponent<RectTransform>();
     }

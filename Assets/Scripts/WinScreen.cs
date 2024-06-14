@@ -16,7 +16,7 @@ public class WinScreen : MonoBehaviour
 
     [SerializeField] private float _animationDuration;
 
-    private void Awake()
+    public void Init()
     {
         _continueButton.onClick.AddListener(ContinueButton_Clicked);
     }

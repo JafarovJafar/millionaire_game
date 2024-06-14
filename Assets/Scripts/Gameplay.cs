@@ -7,18 +7,14 @@ public class Gameplay : MonoBehaviour
 {
     public event UnityAction Finished;
 
-    [SerializeField] private IntroScreen _introScreen;
-    [SerializeField] private GameScreenHeader _gameScreenHeader;
-    [SerializeField] private ScoreView _heroGameScore;
-    [SerializeField] private ScoreView _enemyGameScore;
-    [SerializeField] private QuestionView _questionView;
-    [SerializeField] private AnswersView _answersView;
-    [SerializeField] private WinScreen _winScreen;
-
     [SerializeField] private PlayerData _hero;
     [SerializeField] private PlayerData _enemy;
 
-    [SerializeField] private BaseEnemy _enemyLogic;
+    private IntroScreen _introScreen;
+    private GameScreen _gameScreen;
+    private WinScreen _winScreen;
+
+    private BaseEnemy _enemyLogic;
 
     private LevelData _currentLevel;
 
@@ -27,6 +23,27 @@ public class Gameplay : MonoBehaviour
 
     private int _heroPlayerIndex = 0;
     private int _enemyPlayerIndex = 1;
+
+    /// <summary>
+    /// Инициализация кор-лупа
+    /// </summary>
+    /// <param name="introScreen">Начальный экран</param>
+    /// <param name="gameScreen">Экран геймплея</param>
+    /// <param name="winScreen">Экран конца битвы</param>
+    /// <param name="enemy">Логика врага</param>
+    public void Init
+    (
+        IntroScreen introScreen,
+        GameScreen gameScreen,
+        WinScreen winScreen,
+        BaseEnemy enemy
+    )
+    {
+        _introScreen = introScreen;
+        _gameScreen = gameScreen;
+        _winScreen = winScreen;
+        _enemyLogic = enemy;
+    }
 
     /// <summary>
     /// Начать core-loop
@@ -69,17 +86,17 @@ public class Gameplay : MonoBehaviour
     {
         UpdateScoreView();
 
-        _gameScreenHeader.Hide();
+        _gameScreen.HideHeader();
 
         _winScreen.Hide(true);
-        _questionView.DisAppear(true);
-        _answersView.DisAppear(true);
+        _gameScreen.HideQuestion(true);
+        _gameScreen.HideAnswers(true);
 
-        _answersView.AnswerClicked += Answer_Clicked;
+        _gameScreen.AnswerClicked += Answer_Clicked;
 
         yield return ShowIntro();
 
-        _gameScreenHeader.Show();
+        _gameScreen.ShowHeader();
 
         while (_currentQuestionIndex < _questionsIndexesOrder.Length)
         {
@@ -100,7 +117,7 @@ public class Gameplay : MonoBehaviour
             {
                 _enemy.SelectedAnswer = true;
                 _enemy.AnswerIndex = answerIndex;
-                _answersView.Select(answerIndex, _enemyPlayerIndex);
+                _gameScreen.SelectAnswer(answerIndex, _enemyPlayerIndex);
             });
 
             // ждем, пока игроки ответят
@@ -125,7 +142,7 @@ public class Gameplay : MonoBehaviour
             _currentQuestionIndex++;
         }
 
-        _answersView.AnswerClicked -= Answer_Clicked;
+        _gameScreen.AnswerClicked -= Answer_Clicked;
 
         _winScreen.Show(_hero, _enemy, false);
         _winScreen.ContinueClicked += WinScreen_ContinueClicked;
@@ -152,31 +169,31 @@ public class Gameplay : MonoBehaviour
     {
         _hero.SelectedAnswer = true;
         _hero.AnswerIndex = answerIndex;
-        _answersView.Select(answerIndex, _heroPlayerIndex);
+        _gameScreen.SelectAnswer(answerIndex, _heroPlayerIndex);
     }
 
     private IEnumerator ShowQuestion(QuestionData currentQuestion)
     {
         bool questionViewAppeared = false;
         UnityAction viewAppearedAction = () => questionViewAppeared = true;
-        _questionView.Appeared += viewAppearedAction;
-        _questionView.SetQuestion(currentQuestion.Question);
-        _questionView.Appear();
+        _gameScreen.QuestionAppeared += viewAppearedAction;
+        _gameScreen.SetQuestionText(currentQuestion.Question);
+        _gameScreen.ShowQuestion();
 
         while (!questionViewAppeared) yield return null;
-        _questionView.Appeared -= viewAppearedAction;
+        _gameScreen.QuestionAppeared -= viewAppearedAction;
     }
 
     private IEnumerator ShowAnswers(QuestionData currentQuestion)
     {
         bool answersViewAppeared = false;
         UnityAction viewAppearedAction = () => answersViewAppeared = true;
-        _answersView.Appeared += viewAppearedAction;
-        _answersView.SetAnswers(currentQuestion.Answers);
-        _answersView.Appear();
+        _gameScreen.AnswersAppeared += viewAppearedAction;
+        _gameScreen.SetAnswers(currentQuestion.Answers);
+        _gameScreen.ShowAnswers();
 
         while (!answersViewAppeared) yield return null;
-        _answersView.Appeared -= viewAppearedAction;
+        _gameScreen.AnswersAppeared -= viewAppearedAction;
     }
 
     private IEnumerator WaitPlayersAnswers()
@@ -201,34 +218,34 @@ public class Gameplay : MonoBehaviour
 
     private void UpdateScoreView()
     {
-        _heroGameScore.SetScore(_hero.Score);
-        _enemyGameScore.SetScore(_enemy.Score);
+        _gameScreen.SetHeroScore(_hero.Score);
+        _gameScreen.SetEnemyScore(_enemy.Score);
     }
 
     private IEnumerator HideAnswers()
     {
         bool answersViewDisAppeared = false;
         UnityAction viewDisAppearedAction = () => answersViewDisAppeared = true;
-        _answersView.DisAppeared += viewDisAppearedAction;
-        _answersView.DisAppear();
+        _gameScreen.AnswersDisAppeared += viewDisAppearedAction;
+        _gameScreen.HideAnswers();
 
         while (!answersViewDisAppeared) yield return null;
-        _answersView.DisAppeared -= viewDisAppearedAction;
+        _gameScreen.AnswersDisAppeared -= viewDisAppearedAction;
     }
 
     private IEnumerator HideQuestion()
     {
         bool questionViewDisAppeared = false;
         UnityAction viewDisAppearedAction = () => questionViewDisAppeared = true;
-        _questionView.DisAppeared += viewDisAppearedAction;
-        _questionView.DisAppear();
+        _gameScreen.QuestionDisAppeared += viewDisAppearedAction;
+        _gameScreen.HideQuestion();
 
         while (!questionViewDisAppeared) yield return null;
-        _questionView.Appeared -= viewDisAppearedAction;
+        _gameScreen.QuestionDisAppeared -= viewDisAppearedAction;
     }
 
     private void ClearSelections()
     {
-        _answersView.DeSelect();
+        _gameScreen.DeSelectAnswers();
     }
 }
