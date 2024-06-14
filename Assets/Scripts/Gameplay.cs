@@ -8,9 +8,12 @@ public class Gameplay : MonoBehaviour
     public event UnityAction Finished;
 
     [SerializeField] private IntroScreen _introScreen;
-    [SerializeField] private WinScreen _winScreen;
+    [SerializeField] private GameScreenHeader _gameScreenHeader;
+    [SerializeField] private ScoreView _heroGameScore;
+    [SerializeField] private ScoreView _enemyGameScore;
     [SerializeField] private QuestionView _questionView;
     [SerializeField] private AnswersView _answersView;
+    [SerializeField] private WinScreen _winScreen;
 
     [SerializeField] private PlayerData _hero;
     [SerializeField] private PlayerData _enemy;
@@ -64,6 +67,10 @@ public class Gameplay : MonoBehaviour
     // core-loop
     private IEnumerator MainCoroutine()
     {
+        UpdateScoreView();
+
+        _gameScreenHeader.Hide();
+
         _winScreen.Hide(true);
         _questionView.DisAppear(true);
         _answersView.DisAppear(true);
@@ -71,6 +78,8 @@ public class Gameplay : MonoBehaviour
         _answersView.AnswerClicked += Answer_Clicked;
 
         yield return ShowIntro();
+
+        _gameScreenHeader.Show();
 
         while (_currentQuestionIndex < _questionsIndexesOrder.Length)
         {
@@ -103,7 +112,7 @@ public class Gameplay : MonoBehaviour
             ResetAnswer(_hero);
             ResetAnswer(_enemy);
 
-
+            UpdateScoreView();
 
             // скрываем ответы
             yield return HideAnswers();
@@ -188,6 +197,12 @@ public class Gameplay : MonoBehaviour
     {
         playerData.AnswerIndex = -1;
         playerData.SelectedAnswer = false;
+    }
+
+    private void UpdateScoreView()
+    {
+        _heroGameScore.SetScore(_hero.Score);
+        _enemyGameScore.SetScore(_enemy.Score);
     }
 
     private IEnumerator HideAnswers()

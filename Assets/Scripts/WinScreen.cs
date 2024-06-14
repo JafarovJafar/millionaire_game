@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.Events;
-using TMPro;
-using DG.Tweening;
 using UnityEngine.UI;
+using DG.Tweening;
+using TMPro;
 
 public class WinScreen : MonoBehaviour
 {
